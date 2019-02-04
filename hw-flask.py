@@ -118,33 +118,90 @@ def precipitation():
 
 @app.route("/api/v1.0/stations")
 def stations():
-    dfstationsToList = all_data['station'].tolist()
-    return jsonify(dfstationsToList)
+    #all_data = pd.read_sql("SELECT * FROM station", conn)
+    #stations2 = all_data.to_dict()
+    #dfstationsToList = stations2['station'].tolist()
+    #station_count3 = session.query(Station.station.all())
+    station4 = engine.execute('SELECT station FROM station').fetchall()
+    station5 = [i[0] for i in station4]
+    #dfstationsToList = station4.to_dict()
+    return jsonify(station5)
 
 @app.route("/api/v1.0/tobs")
 def tobs():
-    return jsonify(prcp_df)
+    #tobs3 = session.query(Measurement.date, Measurement.tobs).filter(Measurement.date.between('2016-08-23', '2017-08-23')).all()
+    tobs4 = engine.execute("SELECT date,tobs FROM measurement WHERE date between '2016-08-23' and '2017-08-23' ORDER BY date ASC").fetchall()
+    #tobs_data_df = pd.read_sql("SELECT date,tobs measurement WHERE date between '2016-08-23' and '2017-08-23' ORDER BY date ASC", conn)
+    #tobs4.columns = ['date', 'tobs']
+    #tobs_df = pd.DataFrame(tobs3, columns=["date", "temperature"])
+    #tobs_data_df.columns = ['date', 'tobs']
+    #tobs_dict = tobs4.set_index('date')['tobs'].to_dict()
+    tobs_dict1 = dict(tobs4)
+    return jsonify(tobs_dict1)
 
 @app.route("/api/v1.0/<start>")
 def range_a(start):
-    return jsonify(tripduration)
+    #return jsonify(tripduration)
+    #import datetime
+    #end = datetime.datetime(2012, 3, 5)
+    #start = datetime.datetime(2012, 2, 28)
+    #range_fulldates = session.query(Measurement.date, func.avg(Measurement.tobs), func.min(Measurement.tobs),
+    #                                func.max(Measurement.tobs)).filter(Measurement.date >= start).group_by(Measurement.date).all()
+    #fulldates_dict = list(range_fulldates)
+    #return jsonify(fulldates_dict)
     import datetime
     end = datetime.datetime(2012, 3, 5)
     start = datetime.datetime(2012, 2, 28)
     range_fulldates = session.query(Measurement.date, func.avg(Measurement.tobs), func.min(Measurement.tobs),
-                                    func.max(Measurement.tobs)).filter(Measurement.date >= start).group_by(Measurement.date).all()
-    range_fulldates
-    return jsonify(range_fulldates)
+                                    func.max(Measurement.tobs)).filter(Measurement.date >= start).group_by(
+        Measurement.date).all()
+    fulldates_dict = list(range_fulldates)
+    start1 = [i[0] for i in fulldates_dict]
+    start2 = [i[1] for i in fulldates_dict]
+    start3 = [i[2] for i in fulldates_dict]
+    start4 = [i[3] for i in fulldates_dict]
+    start5df = pd.DataFrame(
+        {'date': start1,
+         'tavg': start2,
+         'tmax': start4,
+         'tmin': start3
+         })
+    start5df.reset_index()
+    start5df.set_index('date', inplace=True)
+    start6 = start5df.to_dict('index')
+    return jsonify(start6)
+
 
 @app.route("/api/v1.0/<start>/<end>")
 def range_b(start,end):
+    #import datetime
+    #end = datetime.datetime(2012, 3, 5)
+    #start = datetime.datetime(2012, 2, 28)
+    #range_vacationdates = session.query(Measurement.date, func.avg(Measurement.tobs), func.min(Measurement.tobs),
+    #                                func.max(Measurement.tobs)).filter(Measurement.date.between(start, end)).group_by(Measurement.date).all()
+    #range_vacationdates
+    #return jsonify(range_fulldates)
     import datetime
     end = datetime.datetime(2012, 3, 5)
     start = datetime.datetime(2012, 2, 28)
-    range_vacationdates = session.query(Measurement.date, func.avg(Measurement.tobs), func.min(Measurement.tobs),
-                                    func.max(Measurement.tobs)).filter(Measurement.date.between(start, end)).group_by(Measurement.date).all()
-    range_vacationdates
-    return jsonify(range_fulldates)
+    start_end_full = session.query(Measurement.date, func.avg(Measurement.tobs), func.min(Measurement.tobs),
+                                    func.max(Measurement.tobs)).filter(Measurement.date.between(start, end)).group_by(
+        Measurement.date).all()
+    startend_list = list(start_end_full)
+    startend1 = [i[0] for i in startend_list]
+    startend2 = [i[1] for i in startend_list]
+    startend3 = [i[2] for i in startend_list]
+    startend4 = [i[3] for i in startend_list]
+    startend15df = pd.DataFrame(
+        {'date': startend1,
+         'tavg': startend2,
+         'tmax': startend3,
+         'tmin': startend4
+         })
+    startend15df.reset_index()
+    startend15df.set_index('date', inplace=True)
+    startend16df = startend15df.to_dict('index')
+    return jsonify(startend16df)
 
 if __name__ == "__main__":
     app.run(debug=True)
